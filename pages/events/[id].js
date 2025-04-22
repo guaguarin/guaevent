@@ -1,38 +1,34 @@
-// pages/events/[id].js
+// /events/[id].tsx
+
 import { useRouter } from 'next/router'
 import { useEffect, useState } from 'react'
 import { createClient } from '@supabase/supabase-js'
 
 const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
 )
 
 export default function EventDetailPage() {
   const router = useRouter()
   const { id } = router.query
-  const [event, setEvent] = useState(null)
-  const [user, setUser] = useState(null)
+  const [event, setEvent] = useState<any>(null)
+  const [user, setUser] = useState<any>(null)
 
   useEffect(() => {
     if (!id) return
 
-    // 撈活動資料
+    // 查活動
     supabase
       .from('Event')
       .select('*')
       .eq('id', id)
       .single()
-      .then(({ data, error }) => {
-        if (error) {
-          console.error('活動撈取失敗', error)
-        } else {
-          setEvent(data)
-        }
+      .then(({ data }) => {
+        setEvent(data)
       })
-  }, [id])
 
-  useEffect(() => {
+    // 抓 cookie 裡的登入者
     const cookieStr = document.cookie
     const match = cookieStr.match(/user=([^;]+)/)
     if (match) {
@@ -43,7 +39,7 @@ export default function EventDetailPage() {
         console.error('Cookie decode fail', e)
       }
     }
-  }, [])
+  }, [id])
 
   const handleRegister = async () => {
     if (!user) {
