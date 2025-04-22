@@ -12,8 +12,8 @@ const supabase = createClient(
 export default function EventDetailPage() {
   const router = useRouter()
   const { id } = router.query
-  const [event, setEvent] = useState<any>(null)
-  const [user, setUser] = useState<any>(null)
+  const [event, setEvent] = useState(null)
+  const [user, setUser] = useState(null)
 
   useEffect(() => {
     if (!id) return
