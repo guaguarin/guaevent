@@ -1,4 +1,4 @@
-// pages/events/[id].tsx
+// pages/events/[id].js
 import { useRouter } from 'next/router'
 import { useEffect, useState } from 'react'
 
@@ -16,9 +16,9 @@ const mockEvents = {
 export default function EventDetailPage() {
   const router = useRouter()
   const { id } = router.query
-  const [user, setUser] = useState<any>(null)
+  const [user, setUser] = useState(null)
 
-  const event = mockEvents[id as string]
+  const event = mockEvents[id]
 
   useEffect(() => {
     const cookieStr = document.cookie
