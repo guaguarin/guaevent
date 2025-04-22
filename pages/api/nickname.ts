@@ -1,26 +1,11 @@
-import { Client, GatewayIntentBits } from 'discord.js'
-
-const bot = new Client({
-  intents: [
-    GatewayIntentBits.Guilds,
-    GatewayIntentBits.GuildMembers,
-  ],
-})
-
-let botReady = false
-
-bot.once('ready', () => {
-  console.log('🔁 Bot 已準備查詢暱稱')
-  botReady = true
-})
-
-bot.login(process.env.DISCORD_TOKEN)
+// pages/api/nickname.ts
+import { bot, ready } from '@/lib/discordClient'
 
 export default async function handler(req, res) {
-  if (!botReady) return res.status(503).json({ error: 'Bot 尚未準備完成' })
+  if (!ready) return res.status(503).json({ error: 'Bot 尚未準備完成' })
 
-  const { id } = req.query // Discord 使用者 ID
-  const guildId = process.env.DISCORD_GUILD_ID // 伺服器 ID
+  const { id } = req.query
+  const guildId = process.env.DISCORD_GUILD_ID
 
   if (!id || !guildId) return res.status(400).json({ error: '缺少 id 或 guildId' })
 
