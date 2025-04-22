@@ -7,19 +7,28 @@ export default function EventsPage() {
   const [user, setUser] = useState(null)
 
   useEffect(() => {
-    // 取得登入使用者
+    // 取得登入使用者 & 暱稱
     const cookieStr = document.cookie
     const match = cookieStr.match(/user=([^;]+)/)
     if (match) {
       try {
         const u = JSON.parse(decodeURIComponent(match[1]))
         setUser(u)
+
+        // 🚀 呼叫 API 拿伺服器暱稱
+        fetch(`/api/nickname?id=${u.id}`)
+          .then(res => res.json())
+          .then(data => {
+            if (data.nickname) {
+              setUser((prev) => ({ ...prev, nickname: data.nickname }))
+            }
+          })
       } catch (e) {
         console.error('Cookie decode fail', e)
       }
     }
 
-    // 取得活動資料
+    // 撈活動清單
     const fetchEvents = async () => {
       const res = await fetch('/api/events')
       const data = await res.json()
@@ -31,8 +40,8 @@ export default function EventsPage() {
 
   return (
     <div className="p-6 max-w-2xl mx-auto">
-      <h1 className="text-2xl font-bold mb-4">歡迎來到活動頁 👋</h1>
-      <p className="mb-6">你好，{user?.username || '訪客'}</p>
+      <h1 className="text-2xl font-bold mb-4">歡迎來到呱呱釣蝦場－活動列表 👋</h1>
+      <p className="mb-6">你好，{user?.nickname || user?.username || '訪客'}</p>
 
       {events.length === 0 ? (
         <p>尚無活動</p>
