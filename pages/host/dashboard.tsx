@@ -1,4 +1,4 @@
-///pages/host/dashboard.tsx
+// pages/host/dashboard.tsx
 
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
@@ -22,6 +22,18 @@ export default function HostDashboard() {
     try {
       const u = JSON.parse(decodeURIComponent(match[1]))
       setUser(u)
+
+      // 📌 補 fetch nickname
+      supabase
+        .from('User')
+        .select('nickname')
+        .eq('discordId', u.id)
+        .single()
+        .then(({ data }) => {
+          if (data?.nickname) {
+            setUser((prev) => ({ ...prev, nickname: data.nickname }))
+          }
+        })
 
       // 🚀 查詢這個主辦人的活動清單
       supabase
