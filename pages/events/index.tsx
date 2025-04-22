@@ -1,13 +1,22 @@
-// pages/events/index.tsx
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
+import { createClient } from '@supabase/supabase-js'
+
+// 初始化 Supabase Client
+const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+)
 
 export default function EventsPage() {
-  const [events, setEvents] = useState([])
-  const [user, setUser] = useState(null)
+  const [events, setEvents] = useState([
+    { id: '1', title: 'Discord測試活動一', description: '測試用的！' },
+    { id: '2', title: '測試活動二', description: '馬卡巴卡rin好棒棒🎨' }
+  ])
+  const [user, setUser] = useState<any>(null)
 
   useEffect(() => {
-    // 取得登入使用者 & 暱稱
+    // 讀 Cookie 取得登入資訊
     const cookieStr = document.cookie
     const match = cookieStr.match(/user=([^;]+)/)
     if (match) {
@@ -15,27 +24,21 @@ export default function EventsPage() {
         const u = JSON.parse(decodeURIComponent(match[1]))
         setUser(u)
 
-        // 🚀 呼叫 API 拿伺服器暱稱
-        fetch(`/api/nickname?id=${u.id}`)
-          .then(res => res.json())
-          .then(data => {
-            if (data.nickname) {
-              setUser((prev) => ({ ...prev, nickname: data.nickname }))
+        // 🔍 從 Supabase 抓 nickname
+        supabase
+          .from('User')
+          .select('nickname')
+          .eq('discordId', u.id)
+          .single()
+          .then(({ data }) => {
+            if (data?.nickname) {
+              setUser((prev: any) => ({ ...prev, nickname: data.nickname }))
             }
           })
       } catch (e) {
         console.error('Cookie decode fail', e)
       }
     }
-
-    // 撈活動清單
-    const fetchEvents = async () => {
-      const res = await fetch('/api/events')
-      const data = await res.json()
-      setEvents(data)
-    }
-
-    fetchEvents()
   }, [])
 
   return (
@@ -44,7 +47,7 @@ export default function EventsPage() {
       <p className="mb-6">你好，{user?.nickname || user?.username || '訪客'}</p>
 
       {events.length === 0 ? (
-        <p>尚無活動</p>
+        <p>目前沒有活動</p>
       ) : (
         events.map((event) => (
           <div key={event.id} className="mb-4 p-4 border rounded shadow">
