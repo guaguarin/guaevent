@@ -25,6 +25,9 @@ export default async function handler(req, res) {
 
     const user = userRes.data;
 
+    // 儲存 Cookie
+    res.setHeader('Set-Cookie', `user=${encodeURIComponent(JSON.stringify(user))}; Path=/;`)
+
     // 這裡你可以做：儲存 session、寫入資料庫等操作
 
     // ✅ 登入成功後導向活動頁
