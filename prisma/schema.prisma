@@ -8,13 +8,14 @@ datasource db {
 }
 
 model User {
-  id        String   @id @default(uuid())
-  discordId String   @unique
-  username  String
-  avatar    String?
-  createdAt DateTime @default(now())
+  id           String   @id           // 將 Discord ID 當作主鍵
+  username     String
+  nickname     String?
+  isHost       Boolean  @default(false)
   registrations Registration[]
+  hostedEvents  EventUserHost[]       // 一對多：這位使用者主辦了哪些活動
 }
+
 
 model Event {
   id           String   @id           // 活動 ID（字串）
