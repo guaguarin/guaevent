@@ -1,3 +1,4 @@
+// pages/api/auth/callback.ts
 import axios from 'axios';
 
 export default async function handler(req, res) {
@@ -24,11 +25,10 @@ export default async function handler(req, res) {
 
     const user = userRes.data;
 
-    res.send(`
-      <h1>登入成功 🎉</h1>
-      <p>你好，${user.username}#${user.discriminator}</p>
-      <pre>${JSON.stringify(user, null, 2)}</pre>
-    `);
+    // 這裡你可以做：儲存 session、寫入資料庫等操作
+
+    // ✅ 登入成功後導向活動頁
+    res.redirect('/events');
   } catch (err) {
     console.error(err);
     res.status(500).send('登入失敗');
