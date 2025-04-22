@@ -1,5 +1,6 @@
 // pages/api/nickname.ts
-import { bot, ready } from '@/lib/discordClient'
+import { bot, ready } from '../../lib/discordClient'
+
 
 export default async function handler(req, res) {
   if (!ready) return res.status(503).json({ error: 'Bot 尚未準備完成' })
