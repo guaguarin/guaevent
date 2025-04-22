@@ -32,7 +32,11 @@ export default async function handler(req, res) {
 
     console.log('✅ 寫入報名資料...')
     await supabase.from('Registration').insert([
-      { userId, eventId },
+      {
+        userId,
+        eventId,
+        status: 'pending', // ✅ 新增這行
+      },
     ])
 
     console.log('✅ 寫入通知資料...')

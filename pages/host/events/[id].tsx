@@ -40,6 +40,24 @@ export default function EventRegistrations() {
       })
   }, [id])
 
+  // ✅ 更新報名狀態（通過 / 拒絕）
+  const handleUpdateStatus = async (regId: string, status: 'approved' | 'rejected') => {
+    const res = await fetch('/api/registration/update-status', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id: regId, status }),
+    })
+
+    const result = await res.json()
+    if (result.success) {
+      setRegistrations((prev) =>
+        prev.map((r) => (r.id === regId ? { ...r, status } : r))
+      )
+    } else {
+      alert('❌ 更新失敗：' + result.error)
+    }
+  }
+
   return (
     <div className="p-6 max-w-4xl mx-auto">
       <h1 className="text-2xl font-bold mb-4">📋 活動報名名單</h1>
@@ -55,7 +73,7 @@ export default function EventRegistrations() {
               <th className="p-2">暱稱 / 帳號</th>
               <th className="p-2">Discord ID</th>
               <th className="p-2">報名時間</th>
-              <th className="p-2">狀態</th>
+              <th className="p-2">狀態 / 審核</th>
             </tr>
           </thead>
           <tbody>
@@ -65,7 +83,23 @@ export default function EventRegistrations() {
                 <td className="p-2">{r.user?.nickname || r.user?.username}</td>
                 <td className="p-2 text-gray-500">{r.user?.discordId}</td>
                 <td className="p-2">{new Date(r.registeredAt).toLocaleString()}</td>
-                <td className="p-2">{r.status || '排隊中'}</td>
+                <td className="p-2">
+                  {r.status || '排隊中'}
+                  <div className="mt-1 space-x-1">
+                    <button
+                      onClick={() => handleUpdateStatus(r.id, 'approved')}
+                      className="bg-green-600 text-white px-2 py-0.5 text-xs rounded"
+                    >
+                      通過
+                    </button>
+                    <button
+                      onClick={() => handleUpdateStatus(r.id, 'rejected')}
+                      className="bg-red-500 text-white px-2 py-0.5 text-xs rounded"
+                    >
+                      拒絕
+                    </button>
+                  </div>
+                </td>
               </tr>
             ))}
           </tbody>
