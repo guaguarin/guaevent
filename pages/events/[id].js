@@ -1,24 +1,36 @@
 // pages/events/[id].js
 import { useRouter } from 'next/router'
 import { useEffect, useState } from 'react'
+import { createClient } from '@supabase/supabase-js'
 
-const mockEvents = {
-  '1': {
-    title: 'Discord測試活動一',
-    description: '測試用的！',
-  },
-  '2': {
-    title: '測試活動二',
-    description: '馬卡巴卡rin好棒棒🎨',
-  }
-}
+const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL,
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+)
 
 export default function EventDetailPage() {
   const router = useRouter()
   const { id } = router.query
+  const [event, setEvent] = useState(null)
   const [user, setUser] = useState(null)
 
-  const event = mockEvents[id]
+  useEffect(() => {
+    if (!id) return
+
+    // 撈活動資料
+    supabase
+      .from('Event')
+      .select('*')
+      .eq('id', id)
+      .single()
+      .then(({ data, error }) => {
+        if (error) {
+          console.error('活動撈取失敗', error)
+        } else {
+          setEvent(data)
+        }
+      })
+  }, [id])
 
   useEffect(() => {
     const cookieStr = document.cookie
