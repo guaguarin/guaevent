@@ -1,0 +1,44 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String   @id @default(uuid())
+  discordId String   @unique
+  username  String
+  avatar    String?
+  createdAt DateTime @default(now())
+  registrations Registration[]
+}
+
+model Event {
+  id           String   @id           // 活動 ID（字串）
+  title        String                 // 活動標題
+  description  String?               // 可選：活動說明
+  startTime    DateTime?             // 可選：開始時間
+  endTime      DateTime?             // 可選：結束時間
+  registrations Registration[]
+}
+
+model Registration {
+  id           String   @id @default(uuid())
+  user         User     @relation(fields: [userId], references: [id])
+  userId       String
+  event        Event    @relation(fields: [eventId], references: [id])
+  eventId      String
+  registeredAt DateTime @default(now())
+}
+
+model NotificationLog {
+  id         String   @id @default(uuid())
+  discordId  String
+  eventTitle String
+  status     String   @default("pending")
+  createdAt  DateTime @default(now())
+  sentAt     DateTime?
+}

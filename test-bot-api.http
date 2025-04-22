@@ -1,0 +1,8 @@
+POST http://hk-p-1.node.flybirdhost.net:20014/notify-registration
+Content-Type: application/json
+
+{
+  "token": "guaguaadmin999",
+  "discordId": "560124526105460757",
+  "eventTitle": "測試活動 from REST Client"
+}
