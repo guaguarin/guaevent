@@ -1,5 +1,3 @@
-// pages/host/events/[id].tsx
-
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/router'
 import { createClient } from '@supabase/supabase-js'
@@ -19,7 +17,7 @@ export default function EventRegistrations() {
   useEffect(() => {
     if (!id) return
 
-    // 取得活動名稱
+    // 活動名稱
     supabase
       .from('Event')
       .select('title')
@@ -29,10 +27,10 @@ export default function EventRegistrations() {
         setEventTitle(data?.title || '')
       })
 
-    // 撈取報名資料 + 使用者資料
+    // 報名名單
     supabase
       .from('Registration')
-      .select('*, user:User(nickname, username, discordId)')
+      .select('*, user:User(nickname, username)')
       .eq('eventId', id)
       .order('registeredAt', { ascending: true })
       .then(({ data }) => {
@@ -40,14 +38,13 @@ export default function EventRegistrations() {
       })
   }, [id])
 
-  // ✅ 更新報名狀態（通過 / 拒絕）
+  // ✅ 更新狀態
   const handleUpdateStatus = async (regId: string, status: 'approved' | 'rejected') => {
     const res = await fetch('/api/registration/update-status', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ id: regId, status }),
     })
-
     const result = await res.json()
     if (result.success) {
       setRegistrations((prev) =>
@@ -58,8 +55,35 @@ export default function EventRegistrations() {
     }
   }
 
+  // ✅ 即時更新備註欄位
+  const handleNoteChange = (id: string, note: string) => {
+    setRegistrations((prev) =>
+      prev.map((r) => (r.id === id ? { ...r, note } : r))
+    )
+  }
+
+  // ✅ 儲存備註與狀態
+  const saveChanges = async (regId: string) => {
+    const reg = registrations.find((r) => r.id === regId)
+    const res = await fetch('/api/registration-update', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        id: reg.id,
+        status: reg.status,
+        note: reg.note,
+      }),
+    })
+    const result = await res.json()
+    if (result.success) {
+      alert('✅ 儲存成功')
+    } else {
+      alert('❌ 儲存失敗：' + result.error)
+    }
+  }
+
   return (
-    <div className="p-6 max-w-4xl mx-auto">
+    <div className="p-6 max-w-5xl mx-auto">
       <h1 className="text-2xl font-bold mb-4">📋 活動報名名單</h1>
       <p className="mb-4 text-gray-600">活動名稱：{eventTitle}</p>
 
@@ -71,9 +95,10 @@ export default function EventRegistrations() {
             <tr className="bg-gray-100 text-left">
               <th className="p-2">#</th>
               <th className="p-2">暱稱 / 帳號</th>
-              <th className="p-2">Discord ID</th>
               <th className="p-2">報名時間</th>
-              <th className="p-2">狀態 / 審核</th>
+              <th className="p-2">狀態</th>
+              <th className="p-2">備註</th>
+              <th className="p-2">操作</th>
             </tr>
           </thead>
           <tbody>
@@ -81,24 +106,33 @@ export default function EventRegistrations() {
               <tr key={r.id} className="border-t">
                 <td className="p-2">{i + 1}</td>
                 <td className="p-2">{r.user?.nickname || r.user?.username}</td>
-                <td className="p-2 text-gray-500">{r.user?.discordId}</td>
                 <td className="p-2">{new Date(r.registeredAt).toLocaleString()}</td>
                 <td className="p-2">
-                  {r.status || '排隊中'}
-                  <div className="mt-1 space-x-1">
-                    <button
-                      onClick={() => handleUpdateStatus(r.id, 'approved')}
-                      className="bg-green-600 text-white px-2 py-0.5 text-xs rounded"
-                    >
-                      通過
-                    </button>
-                    <button
-                      onClick={() => handleUpdateStatus(r.id, 'rejected')}
-                      className="bg-red-500 text-white px-2 py-0.5 text-xs rounded"
-                    >
-                      拒絕
-                    </button>
-                  </div>
+                  <select
+                    value={r.status || ''}
+                    onChange={(e) => handleUpdateStatus(r.id, e.target.value as any)}
+                    className="border p-1 rounded"
+                  >
+                    <option value="">排隊中</option>
+                    <option value="approved">通過</option>
+                    <option value="rejected">不通過</option>
+                  </select>
+                </td>
+                <td className="p-2">
+                  <input
+                    type="text"
+                    value={r.note || ''}
+                    onChange={(e) => handleNoteChange(r.id, e.target.value)}
+                    className="border px-2 py-1 w-full rounded"
+                  />
+                </td>
+                <td className="p-2">
+                  <button
+                    onClick={() => saveChanges(r.id)}
+                    className="bg-blue-600 text-white px-3 py-1 rounded"
+                  >
+                    儲存
+                  </button>
                 </td>
               </tr>
             ))}
