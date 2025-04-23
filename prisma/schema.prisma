@@ -33,7 +33,10 @@ model Registration {
   event        Event    @relation(fields: [eventId], references: [id])
   eventId      String
   registeredAt DateTime @default(now())
+  status       String   @default("pending") // pending / approved / rejected
+  note         String?                      // 審核備註
 }
+
 
 model NotificationLog {
   id         String   @id @default(uuid())
