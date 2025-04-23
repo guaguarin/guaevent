@@ -10,7 +10,7 @@ datasource db {
 model User {
   id           String   @id           // 將 Discord ID 當作主鍵
   username     String
-  nickname     String?
+  nickname     String? //DC伺服器使用者暱稱
   isHost       Boolean  @default(false)
   registrations Registration[]
   hostedEvents  EventUserHost[]       // 一對多：這位使用者主辦了哪些活動
