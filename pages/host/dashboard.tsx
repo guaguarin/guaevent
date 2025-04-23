@@ -14,7 +14,6 @@ export default function HostDashboard() {
   const [events, setEvents] = useState<any[]>([])
 
   useEffect(() => {
-    // 從 Cookie 抓登入者
     const cookieStr = document.cookie
     const match = cookieStr.match(/user=([^;]+)/)
     if (!match) return
@@ -23,29 +22,30 @@ export default function HostDashboard() {
       const u = JSON.parse(decodeURIComponent(match[1]))
       setUser(u)
 
-      // 📌 補 fetch nickname
+      // 🚀 查詢這個主辦人的活動清單（透過中介表 EventUserHost）
+      supabase
+        .from('EventUserHost')
+        .select('event:Event(*)')
+        .eq('userId', u.id)
+        .order('event.startTime', { ascending: false })
+        .then(({ data }) => {
+          const events = data?.map((e: any) => e.event) || []
+          setEvents(events)
+        })
+
+      // 📌 補查 nickname（確保顯示正確）
       supabase
         .from('User')
         .select('nickname')
-        .eq('discordId', u.id)
+        .eq('id', u.id)
         .single()
         .then(({ data }) => {
           if (data?.nickname) {
             setUser((prev) => ({ ...prev, nickname: data.nickname }))
           }
         })
-
-      // 🚀 查詢這個主辦人的活動清單
-      supabase
-        .from('Event')
-        .select('*')
-        .contains('hosts', [u.id]) // 假設 Event.hosts 為 ID 陣列
-        .order('startTime', { ascending: false })
-        .then(({ data }) => {
-          setEvents(data || [])
-        })
     } catch (err) {
-      console.error('Cookie 解析錯誤', err)
+      console.error('❌ Cookie 解析錯誤：', err)
     }
   }, [])
 
