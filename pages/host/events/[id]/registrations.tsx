@@ -1,5 +1,3 @@
-// pages/host/events/[id]/registrations.tsx
-
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/router'
 import { createClient } from '@supabase/supabase-js'
@@ -16,6 +14,7 @@ export default function EventRegistrations() {
   const [event, setEvent] = useState<any>(null)
   const [registrations, setRegistrations] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
+  const [error, setError] = useState('')
 
   useEffect(() => {
     if (!eventId) return
@@ -23,27 +22,39 @@ export default function EventRegistrations() {
     const loadData = async () => {
       setLoading(true)
 
-      const { data: eventData } = await supabase
-        .from('Event')
-        .select('*')
-        .eq('id', eventId)
-        .single()
+      try {
+        // 取得活動資料
+        const { data: eventData, error: eventErr } = await supabase
+          .from('Event')
+          .select('*')
+          .eq('id', eventId)
+          .single()
 
-      const { data: regData } = await supabase
-        .from('Registration')
-        .select('*, user:User(username, nickname, discordId)')
-        .eq('eventId', eventId)
-        .order('registeredAt', { ascending: true })
+        if (eventErr) throw eventErr
+        setEvent(eventData)
 
-      setEvent(eventData)
-      setRegistrations(regData || [])
-      setLoading(false)
+        // 取得報名名單（join User）
+        const { data: regData, error: regErr } = await supabase
+          .from('Registration')
+          .select('*, user:User(nickname, username, discordId)')
+          .eq('eventId', eventId)
+          .order('registeredAt', { ascending: true })
+
+        if (regErr) throw regErr
+        setRegistrations(regData || [])
+      } catch (err: any) {
+        console.error('❌ 載入資料失敗：', err)
+        setError('載入報名資料失敗，請稍後再試')
+      } finally {
+        setLoading(false)
+      }
     }
 
     loadData()
   }, [eventId])
 
   if (loading) return <p className="p-6">載入中...</p>
+  if (error) return <p className="p-6 text-red-600">{error}</p>
 
   return (
     <div className="p-6 max-w-5xl mx-auto">
@@ -68,10 +79,10 @@ export default function EventRegistrations() {
             {registrations.map((r, i) => (
               <tr key={r.id} className="border-t">
                 <td className="p-2">{i + 1}</td>
-                <td className="p-2">{r.user?.nickname || r.user?.username}</td>
-                <td className="p-2 text-gray-500">{r.user?.discordId}</td>
+                <td className="p-2">{r.user?.nickname || r.user?.username || '-'}</td>
+                <td className="p-2 text-gray-500">{r.user?.discordId || '-'}</td>
                 <td className="p-2">{r.note || '-'}</td>
-                <td className="p-2">{new Date(r.registeredAt).toLocaleString()}</td>
+                <td className="p-2">{r.registeredAt ? new Date(r.registeredAt).toLocaleString() : '-'}</td>
                 <td className="p-2">{r.status}</td>
               </tr>
             ))}
