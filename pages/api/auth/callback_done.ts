@@ -1,3 +1,4 @@
+// pages/api/auth/callback.ts
 import axios from 'axios';
 import { bot, ready } from '../../../lib/discordClient';
 import { PrismaClient } from '@prisma/client';
@@ -30,7 +31,7 @@ export default async function handler(req, res) {
 
     let nickname = null;
 
-    // ✅ 取得暱稱（需 Bot 已連線且 Guild ID 存在）
+    // ✅ 如果 bot 準備好，就查暱稱（需要 DISCORD_GUILD_ID）
     if (ready && process.env.DISCORD_GUILD_ID) {
       try {
         const guild = await bot.guilds.fetch(process.env.DISCORD_GUILD_ID);
@@ -41,7 +42,7 @@ export default async function handler(req, res) {
       }
     }
 
-    // ✅ upsert 至資料庫
+    // ✅ 更新或新增使用者至 Supabase
     await prisma.user.upsert({
       where: { id: user.id },
       update: {
@@ -55,7 +56,7 @@ export default async function handler(req, res) {
       },
     });
 
-    // ✅ 寫入 Cookie（移除 HttpOnly，方便測試）
+    // ✅ 儲存 Cookie（加上 nickname）
     const userInfo = {
       id: user.id,
       username: user.username,
@@ -65,7 +66,7 @@ export default async function handler(req, res) {
 
     res.setHeader(
       'Set-Cookie',
-      `user=${encodeURIComponent(JSON.stringify(userInfo))}; Path=/; Max-Age=86400; Secure; SameSite=Lax`
+      `user=${encodeURIComponent(JSON.stringify(userInfo))}; Path=/; HttpOnly`
     );
 
     res.redirect('/events');
