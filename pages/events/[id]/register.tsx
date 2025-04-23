@@ -9,6 +9,7 @@ export default function RegisterPage() {
   const [user, setUser] = useState<any>(null)
   const [error, setError] = useState('')
   const [success, setSuccess] = useState(false)
+  const [loading, setLoading] = useState(false)
 
   useEffect(() => {
     const cookieStr = document.cookie
@@ -26,17 +27,28 @@ export default function RegisterPage() {
       return
     }
 
-    const res = await fetch('/api/registrations/create', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ eventId, userId: user.id, note }),
-    })
+    setLoading(true)
+    setError('')
+    try {
+      const res = await fetch('/api/registrations/create', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ eventId, userId: user.id, note }),
+      })
 
-    const result = await res.json()
-    if (res.ok) {
-      setSuccess(true)
-    } else {
-      setError(result.error || '報名失敗')
+      const text = await res.text()
+      const result = text ? JSON.parse(text) : {}
+
+      if (res.ok) {
+        setSuccess(true)
+      } else {
+        setError(result.error || '報名失敗（API 回傳錯誤）')
+      }
+    } catch (err) {
+      console.error('❌ 報名錯誤', err)
+      setError('無法連線到伺服器，請稍後再試')
+    } finally {
+      setLoading(false)
     }
   }
 
@@ -59,8 +71,12 @@ export default function RegisterPage() {
             />
           </div>
           {error && <p className="text-red-600">{error}</p>}
-          <button type="submit" className="bg-blue-600 text-white px-4 py-2 rounded">
-            送出報名
+          <button
+            type="submit"
+            className="bg-blue-600 text-white px-4 py-2 rounded disabled:opacity-50"
+            disabled={loading}
+          >
+            {loading ? '送出中...' : '送出報名'}
           </button>
         </form>
       )}
