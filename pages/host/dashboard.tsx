@@ -1,5 +1,4 @@
 // pages/host/dashboard.tsx
-
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { createClient } from '@supabase/supabase-js'
@@ -12,6 +11,7 @@ const supabase = createClient(
 export default function HostDashboard() {
   const [user, setUser] = useState<any>(null)
   const [events, setEvents] = useState<any[]>([])
+  const [error, setError] = useState('')
 
   useEffect(() => {
     const cookieStr = document.cookie
@@ -22,18 +22,31 @@ export default function HostDashboard() {
       const u = JSON.parse(decodeURIComponent(match[1]))
       setUser(u)
 
-      // 🚀 查詢這個主辦人的活動清單（透過中介表 EventUserHost）
+      // Debug log
+      console.log('👤 目前使用者 ID：', u.id)
+
+      // 查活動：透過中介表 EventUserHost 手動 JOIN
       supabase
         .from('EventUserHost')
-        .select('event:Event(*)')
+        .select(`
+          eventId,
+          Event (*)
+        `)
         .eq('userId', u.id)
-        .order('event.startTime', { ascending: false })
-        .then(({ data }) => {
-          const events = data?.map((e: any) => e.event) || []
+        .then(({ data, error }) => {
+          if (error) {
+            console.error('❌ 查詢 EventUserHost 失敗：', error)
+            setError('查詢活動失敗')
+            return
+          }
+
+          console.log('✅ 查到的活動連結：', data)
+
+          const events = data?.map((row: any) => row.Event) || []
           setEvents(events)
         })
 
-      // 📌 補查 nickname（確保顯示正確）
+      // 查 nickname
       supabase
         .from('User')
         .select('nickname')
@@ -46,6 +59,7 @@ export default function HostDashboard() {
         })
     } catch (err) {
       console.error('❌ Cookie 解析錯誤：', err)
+      setError('登入資訊錯誤')
     }
   }, [])
 
@@ -55,6 +69,8 @@ export default function HostDashboard() {
     <div className="p-6 max-w-3xl mx-auto">
       <h1 className="text-2xl font-bold mb-4">🎯 主辦人後台</h1>
       <p className="mb-4">你好，{user.nickname || user.username}</p>
+
+      {error && <p className="text-red-500 mb-2">{error}</p>}
 
       <div className="flex justify-end mb-4">
         <button className="bg-blue-600 text-white px-4 py-2 rounded">
