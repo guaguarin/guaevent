@@ -10,10 +10,10 @@ datasource db {
 model User {
   id           String   @id           // 將 Discord ID 當作主鍵
   username     String
-  nickname     String?　　　　　 //DC伺服器使用者暱稱
+  nickname     String? // DC伺服器使用者暱稱
   isHost       Boolean  @default(false)
   registrations Registration[]
-  hostedEvents  EventUserHost[]       // 一對多：這位使用者主辦了哪些活動
+  hostedEvents  EventUserHost[]       // 一對多：該使用者主辦了哪些活動
 }
 
 
@@ -24,6 +24,17 @@ model Event {
   startTime    DateTime?             // 可選：開始時間
   endTime      DateTime?             // 可選：結束時間
   registrations Registration[]
+  hosts         EventUserHost[]     
+}
+
+model EventUserHost {
+  eventId String
+  userId  String
+
+  event Event @relation(fields: [eventId], references: [id])
+  user  User  @relation(fields: [userId], references: [id])
+
+  @@id([eventId, userId])  // 複合主鍵
 }
 
 model Registration {
